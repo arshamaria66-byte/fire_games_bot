@@ -48,7 +48,7 @@ Never commit `.env.local`. `.gitignore` excludes local environment files.
    NEXT_PUBLIC_SITE_URL=http://localhost:3000
    ```
 
-   `SUPABASE_SECRET_KEY` is optional and intentionally unused by this current implementation. Never put a secret/service-role key in a `NEXT_PUBLIC_` variable or browser code.
+   This version does not require a Supabase secret/service-role key. Never put a secret/service-role key in a `NEXT_PUBLIC_` variable or browser code.
 
 2. In the Supabase SQL Editor, run `supabase/migrations/202610190001_initial_schema.sql` once. This creates tables, constraints, indexes, RLS policies, the public `game-covers` Storage bucket and administrator-only upload rules.
 3. Run `supabase/seed.sql` in the SQL Editor to add the four repeatable development products. Prices are Toman. The seed is safe to repeat by slug.
