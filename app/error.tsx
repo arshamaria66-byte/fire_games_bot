@@ -1,0 +1,1 @@
+'use client';export default function ErrorPage({reset}:{error:Error&{digest?:string};reset:()=>void}){return <main className="simple-state"><h1>یه مشکلی پیش اومد.</h1><p>لطفاً دوباره تلاش کن.</p><button className="button button-primary" onClick={()=>reset()}>تلاش دوباره</button></main>}

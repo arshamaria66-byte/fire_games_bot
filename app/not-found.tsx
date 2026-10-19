@@ -1,0 +1,1 @@
+import Link from 'next/link';export default function NotFound(){return <main className="simple-state"><span className="section-kicker"><span/> 404</span><h1>این صفحه توی این دنیا نیست.</h1><p>شاید مسیر اشتباهه یا صفحه جابه‌جا شده.</p><Link className="button button-primary" href="/">برگشت به فروشگاه</Link></main>}
