@@ -8,7 +8,7 @@ A Persian-language, right-to-left video-game storefront built with Next.js App R
 - Original, abstract SVG cover illustrations included in `public/games/`. They are FIRE GAMES development placeholders, **not official game artwork**.
 - Guest cart persisted in browser local storage; cart quantities and Toman totals update immediately.
 - Supabase product/category/discount reads, published-product filtering, scheduled discounts, SEO metadata, sitemap and robots configuration.
-- Supabase email/password registration, sign-in and password reset; a protected customer portal with overview, profile editing, order history and per-order details. The portal only loads the signed-in user’s own records.
+- Supabase email/password registration, sign-in, password reset, and Iranian mobile OTP sign-in; a protected customer portal with overview, profile editing, order history and per-order details. The portal only loads the signed-in user’s own records. Dashboard totals come from actual order rows; no seed/demo credentials are created.
 - Expanded admin workspace with a dedicated administrator account page and detailed order/payment records; administrator access is checked on each protected route/action.
 - Admin portal with server-checked admin authorization, overview metrics from database records, product create/read/update/delete, categories, scheduled discounts, order list/status updates, customer profile list, image upload and public store settings.
 - PostgreSQL migration and repeatable seed for the four requested development products.
@@ -54,7 +54,8 @@ Never commit `.env.local`. `.gitignore` excludes local environment files.
 2. In the Supabase SQL Editor, run migrations in timestamp order: first `supabase/migrations/202610190001_initial_schema.sql`, then `supabase/migrations/202610200001_customer_profile_phone.sql`. These create tables, constraints, indexes, RLS policies, the public `game-covers` Storage bucket and administrator-only upload rules, plus the optional customer phone field.
 3. Run `supabase/seed.sql` in the SQL Editor to add the four repeatable development products. Prices are Toman. The seed is safe to repeat by slug.
 4. In **Authentication → URL Configuration**, set the local Site URL to `http://localhost:3000` and add your production URL to the allowed redirect URLs. Enable email/password authentication. For production, configure SMTP and your desired email-confirmation/password-reset behavior.
-5. Restart `npm run dev` after changing `.env.local`.
+5. To enable the mobile sign-in form, enable Phone authentication in Supabase Auth and configure a real SMS provider/template. The customer enters their own phone number; the app normalizes Iranian `09…` numbers to E.164 and sends an OTP. A new user must prove control of that number by entering the SMS code. No phone number or bypass code is hard-coded in the source. The first verified SMS sign-in opens profile setup with the display name `arsham` prefilled; save it there to use it as the account display name.
+6. Restart `npm run dev` after changing `.env.local`.
 
 ### Grant an administrator safely
 
@@ -77,7 +78,7 @@ The migration creates a 5 MB `game-covers` bucket, allows JPEG/PNG/WebP/SVG, per
 npm run dev         # development server, bound to 0.0.0.0 for previews
 npm run typecheck   # strict TypeScript check
 npm run lint        # ESLint
-npm test            # pricing and cart business-rule tests
+npm test            # pricing, cart, and Iranian phone normalization tests
 npm run build       # production build
 npm start           # production server
 ```
@@ -96,7 +97,7 @@ npm start           # production server
 - `/` — Persian storefront
 - `/games/[slug]` — database-backed dynamic product details
 - `/cart`, `/checkout` — guest cart; checkout configuration notice
-- `/auth/login`, `/auth/register`, `/auth/reset-password`, `/account`, `/account/profile`, `/account/orders`, `/account/orders/[id]`
+- `/auth/login` (email/password or Iranian SMS OTP), `/auth/phone-verify`, `/auth/register`, `/auth/reset-password`, `/account`, `/account/profile`, `/account/orders`, `/account/orders/[id]`
 - `/admin/login`, `/admin`, `/admin/account`, `/admin/orders/[id]`, and management pages for products, categories, discounts, orders, customers, media and store settings
 
 ## Validation and deployment

@@ -1,4 +1,4 @@
-'use server';import {redirect} from 'next/navigation';import {z} from 'zod';import {createSupabaseServer} from '@/lib/supabase/server';
+'use server';import {redirect} from 'next/navigation';import {z} from 'zod';import {createSupabaseServer} from '@/lib/supabase/server';import {cookies} from 'next/headers';import {normalizeIranPhone} from '@/lib/phone.mjs';
 const credentials=z.object({email:z.string().email(),password:z.string().min(8)});
 export async function signInAction(formData:FormData){const parsed=credentials.safeParse({email:formData.get('email'),password:formData.get('password')});if(!parsed.success)redirect('/auth/login?error=invalid');const sb=await createSupabaseServer();if(!sb)redirect('/auth/login?error=setup');const {error}=await sb.auth.signInWithPassword(parsed.data);if(error)redirect('/auth/login?error=credentials');redirect('/account');}
 export async function registerAction(formData:FormData){const parsed=credentials.safeParse({email:formData.get('email'),password:formData.get('password')});if(!parsed.success)redirect('/auth/register?error=invalid');const sb=await createSupabaseServer();if(!sb)redirect('/auth/register?error=setup');const {error}=await sb.auth.signUp(parsed.data);if(error)redirect('/auth/register?error=failed');redirect('/auth/register?success=confirm');}
@@ -17,4 +17,29 @@ export async function updateCustomerProfileAction(formData:FormData){
  const {error}=await sb.from('profiles').update({display_name:name.data||null,phone:phone.data||null,updated_at:new Date().toISOString()}).eq('user_id',user.id);
  if(error){console.error('Profile update failed:',error.message);redirect('/account/profile?error=save')}
  const {revalidatePath}=await import('next/cache');revalidatePath('/account');revalidatePath('/account/profile');redirect('/account/profile?saved=1');
+}
+
+const pendingPhoneCookie='fire-games-pending-phone';
+function clearPendingPhoneCookie(jar:Awaited<ReturnType<typeof cookies>>){jar.set(pendingPhoneCookie,'',{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/auth/phone-verify',maxAge:0})}
+export async function requestPhoneOtpAction(formData:FormData){
+ const phone=normalizeIranPhone(String(formData.get('phone')||''));
+ if(!phone)redirect('/auth/login?phoneError=invalid');
+ const sb=await createSupabaseServer();if(!sb)redirect('/auth/login?phoneError=setup');
+ const {error}=await sb.auth.signInWithOtp({phone,options:{shouldCreateUser:true}});
+ if(error){console.error('Phone OTP request failed:',error.message);redirect('/auth/login?phoneError=sms')}
+ const jar=await cookies();jar.set(pendingPhoneCookie,phone,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/auth/phone-verify',maxAge:600});
+ redirect('/auth/phone-verify');
+}
+export async function verifyPhoneOtpAction(formData:FormData){
+ const token=z.string().trim().regex(/^\d{6}$/).safeParse(formData.get('token'));
+ if(!token.success)redirect('/auth/phone-verify?error=code');
+ const jar=await cookies(),phone=jar.get(pendingPhoneCookie)?.value;
+ if(!phone)redirect('/auth/login?phoneError=expired');
+ const sb=await createSupabaseServer();if(!sb)redirect('/auth/login?phoneError=setup');
+ const {data,error}=await sb.auth.verifyOtp({phone,token:token.data,type:'sms'});
+ if(error||!data.user){clearPendingPhoneCookie(jar);redirect('/auth/phone-verify?error=invalid')}
+ await sb.from('profiles').update({phone,updated_at:new Date().toISOString()}).eq('user_id',data.user.id);
+ clearPendingPhoneCookie(jar);
+ const {revalidatePath}=await import('next/cache');revalidatePath('/account');revalidatePath('/account/profile');
+ redirect('/account/profile?welcome=1');
 }
