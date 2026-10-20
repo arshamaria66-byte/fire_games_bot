@@ -7,3 +7,14 @@ export async function signOutAction(){const sb=await createSupabaseServer();if(s
 
 export async function requestPasswordResetAction(formData:FormData){const email=z.string().email().safeParse(formData.get('email'));if(!email.success)redirect('/auth/reset-password?error=invalid');const sb=await createSupabaseServer();if(!sb)redirect('/auth/reset-password?error=setup');const site=process.env.NEXT_PUBLIC_SITE_URL||'http://localhost:3000';const {error}=await sb.auth.resetPasswordForEmail(email.data,{redirectTo:`${site}/auth/update-password`});if(error)redirect('/auth/reset-password?error=failed');redirect('/auth/reset-password?sent=1');}
 export async function updatePasswordAction(formData:FormData){const password=z.string().min(8).safeParse(formData.get('password'));const code=String(formData.get('code')||'');if(!password.success||!code)redirect('/auth/update-password?error=invalid');const sb=await createSupabaseServer();if(!sb)redirect('/auth/update-password?error=setup');const {error:exchangeError}=await sb.auth.exchangeCodeForSession(code);if(exchangeError)redirect('/auth/update-password?error=expired');const {error}=await sb.auth.updateUser({password:password.data});if(error)redirect('/auth/update-password?error=failed');redirect('/account');}
+
+export async function updateCustomerProfileAction(formData:FormData){
+ const name=z.string().trim().max(80).safeParse(formData.get('display_name')||'');
+ const phone=z.string().trim().max(25).refine(value=>value===''||/^[0-9+()\-\s]{6,25}$/.test(value)).safeParse(formData.get('phone')||'');
+ if(!name.success||!phone.success)redirect('/account/profile?error=invalid');
+ const sb=await createSupabaseServer();if(!sb)redirect('/account/profile?error=setup');
+ const {data:{user}}=await sb.auth.getUser();if(!user)redirect('/auth/login');
+ const {error}=await sb.from('profiles').update({display_name:name.data||null,phone:phone.data||null,updated_at:new Date().toISOString()}).eq('user_id',user.id);
+ if(error){console.error('Profile update failed:',error.message);redirect('/account/profile?error=save')}
+ const {revalidatePath}=await import('next/cache');revalidatePath('/account');revalidatePath('/account/profile');redirect('/account/profile?saved=1');
+}

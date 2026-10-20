@@ -1,0 +1,7 @@
+'use client';
+import Link from 'next/link';
+import {usePathname} from 'next/navigation';
+import {ClipboardList,LogOut,Settings2,Store,UserRound} from 'lucide-react';
+import {signOutAction} from '@/lib/actions/auth';
+const nav=[{href:'/account',label:'پیشخوان',icon:Store},{href:'/account/orders',label:'سفارش‌های من',icon:ClipboardList},{href:'/account/profile',label:'اطلاعات حساب',icon:UserRound}];
+export function AccountShell({email,children}:{email:string;children:React.ReactNode}){const path=usePathname();return <section className="account-shell page-shell"><aside className="account-sidebar"><div className="account-identity"><div className="account-avatar">{email.charAt(0).toUpperCase()}</div><div><b>حساب کاربری</b><small dir="ltr">{email}</small></div></div><nav aria-label="ناوبری حساب کاربری">{nav.map(({href,label,icon:Icon})=><Link key={href} href={href} className={path===href||href!=='/account'&&path.startsWith(href+'/')?'current':''} aria-current={path===href?'page':undefined}><Icon size={17}/>{label}</Link>)}</nav><Link href="/" className="account-store-link"><Store size={16}/> بازگشت به فروشگاه</Link><form action={signOutAction}><button className="account-logout"><LogOut size={16}/> خروج از حساب</button></form><div className="account-help"><Settings2 size={15}/><span>برای پیگیری سفارش‌ها از همین بخش استفاده کن.</span></div></aside><div className="account-main">{children}</div></section>}

@@ -8,7 +8,8 @@ A Persian-language, right-to-left video-game storefront built with Next.js App R
 - Original, abstract SVG cover illustrations included in `public/games/`. They are FIRE GAMES development placeholders, **not official game artwork**.
 - Guest cart persisted in browser local storage; cart quantities and Toman totals update immediately.
 - Supabase product/category/discount reads, published-product filtering, scheduled discounts, SEO metadata, sitemap and robots configuration.
-- Supabase email/password registration and sign-in, customer account and private order list.
+- Supabase email/password registration, sign-in and password reset; a protected customer portal with overview, profile editing, order history and per-order details. The portal only loads the signed-in user’s own records.
+- Expanded admin workspace with a dedicated administrator account page and detailed order/payment records; administrator access is checked on each protected route/action.
 - Admin portal with server-checked admin authorization, overview metrics from database records, product create/read/update/delete, categories, scheduled discounts, order list/status updates, customer profile list, image upload and public store settings.
 - PostgreSQL migration and repeatable seed for the four requested development products.
 - Checkout honestly remains unavailable until a payment provider is configured. It does not create fake orders or claim payment success. The migration includes order, item snapshot and payment reference tables; no client policy permits order/payment insertion or payment confirmation.
@@ -50,7 +51,7 @@ Never commit `.env.local`. `.gitignore` excludes local environment files.
 
    This version does not require a Supabase secret/service-role key. Never put a secret/service-role key in a `NEXT_PUBLIC_` variable or browser code.
 
-2. In the Supabase SQL Editor, run `supabase/migrations/202610190001_initial_schema.sql` once. This creates tables, constraints, indexes, RLS policies, the public `game-covers` Storage bucket and administrator-only upload rules.
+2. In the Supabase SQL Editor, run migrations in timestamp order: first `supabase/migrations/202610190001_initial_schema.sql`, then `supabase/migrations/202610200001_customer_profile_phone.sql`. These create tables, constraints, indexes, RLS policies, the public `game-covers` Storage bucket and administrator-only upload rules, plus the optional customer phone field.
 3. Run `supabase/seed.sql` in the SQL Editor to add the four repeatable development products. Prices are Toman. The seed is safe to repeat by slug.
 4. In **Authentication → URL Configuration**, set the local Site URL to `http://localhost:3000` and add your production URL to the allowed redirect URLs. Enable email/password authentication. For production, configure SMTP and your desired email-confirmation/password-reset behavior.
 5. Restart `npm run dev` after changing `.env.local`.
@@ -95,8 +96,8 @@ npm start           # production server
 - `/` — Persian storefront
 - `/games/[slug]` — database-backed dynamic product details
 - `/cart`, `/checkout` — guest cart; checkout configuration notice
-- `/auth/login`, `/auth/register`, `/account`, `/account/orders`
-- `/admin/login`, `/admin` and management pages for products, categories, discounts, orders, customers, media and store settings
+- `/auth/login`, `/auth/register`, `/auth/reset-password`, `/account`, `/account/profile`, `/account/orders`, `/account/orders/[id]`
+- `/admin/login`, `/admin`, `/admin/account`, `/admin/orders/[id]`, and management pages for products, categories, discounts, orders, customers, media and store settings
 
 ## Validation and deployment
 
