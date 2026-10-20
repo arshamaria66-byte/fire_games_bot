@@ -1,6 +1,6 @@
 # FIRE GAMES
 
-A Persian-language, right-to-left video-game storefront built with Next.js App Router, React, TypeScript, Tailwind CSS 4, Supabase Auth, PostgreSQL and Supabase Storage. Prices are integer **Toman** everywhere in the database and application.
+A Persian-language, right-to-left video-game storefront built with Next.js App Router, React, TypeScript, hand-written semantic HTML/JSX and plain CSS (no CSS/UI framework), Supabase Auth, PostgreSQL and Supabase Storage. Prices are integer **Toman** everywhere in the database and application.
 
 ## What is implemented
 
